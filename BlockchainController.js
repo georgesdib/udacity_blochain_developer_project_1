@@ -12,7 +12,7 @@ class BlockchainController {
         this.app = app;
         this.blockchain = blockchainObj;
         // All the endpoints methods needs to be called in the constructor to initialize the route.
-        this.requestValidation();
+        this.validateChain();
         this.getBlockByHeight();
         this.requestOwnership();
         this.submitStar();
@@ -23,7 +23,7 @@ class BlockchainController {
     }
 
     // Enpoint to validate the chain (POST Endpoint)
-    requestValidation() {
+    validateChain() {
         this.app.post("/validateChain", async (req, res) => {
             const message = await this.blockchain.validateChain();
             if (message.length === 0) {
