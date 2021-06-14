@@ -18,6 +18,8 @@ class BlockchainController {
         this.submitStar();
         this.getBlockByHash();
         this.getStarsByOwner();
+        this.tamperChain();
+        this.tamperBlock()
     }
 
     // Enpoint to validate the chain (POST Endpoint)
@@ -28,6 +30,40 @@ class BlockchainController {
                 return res.status(200).json("Chain is valid");
             } else {
                 res.status(500).json(message);
+            }
+        });
+    }
+
+    // Enpoint to tamper with the chain (POST Endpoint)
+    tamperChain() {
+        this.app.post("/tamperChain/:height", async (req, res) => {
+            if(req.params.height) {
+                const height = parseInt(req.params.height);
+                const block = this.blockchain.tamperWithChain(height);
+                if (block) {
+                    return res.status(200).send("Chain tampered");
+                } else {
+                    res.status(500).send("Block not found");
+                }
+            } else {
+                return res.status(500).send("Check the Body Parameter!");
+            }
+        });
+    }
+
+    // Enpoint to tamper with the block (POST Endpoint)
+    tamperBlock() {
+        this.app.post("/tamperBlock/:height", async (req, res) => {
+            if(req.params.height) {
+                const height = parseInt(req.params.height);
+                const block = this.blockchain.tamperWithBlock(height);
+                if (block) {
+                    return res.status(200).send("Block tampered");
+                } else {
+                    res.status(500).send("Block not found");
+                }
+            } else {
+                return res.status(500).send("Check the Body Parameter!");
             }
         });
     }

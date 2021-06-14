@@ -40,6 +40,26 @@ class Blockchain {
         }
     }
 
+    async tamperWithBlock(height) {
+        const block = await this.getBlockByHeight(height);
+        if (block) {
+          block.time = 3;
+          return block;
+        } else {
+          return null;
+        }
+      }
+    
+      async tamperWithChain(height) {
+        const block = await this.getBlockByHeight(height);
+        if (block) {
+          block.previousBlockHash = 123456;
+          return block;
+        } else {
+          return null;
+        }
+      }
+
     /**
      * Utility method that return a Promise that will resolve with the height of the chain
      */
@@ -121,15 +141,21 @@ class Blockchain {
         return new Promise(async (resolve, reject) => {
             const time = parseInt(message.split(':')[1]);
             const currentTime = parseInt(new Date().getTime().toString().slice(0,-3));
-            if ((currentTime - time) / 60 > 5) {
+            if (Math.floor((currentTime - time) / 60) > 5) {
                 reject("More than 5 minutes have elapsed");
-            } else if(bitcoinMessage.verify(message, address, signature)) {
-                let block = new BlockClass.Block({owner: address, star: star});
-                this._addBlock(block).then((block) => {
-                    resolve(block);
-                }).catch((error) => reject(error));
             } else {
-                reject ("Signature not valid");
+                try {
+                    if(bitcoinMessage.verify(message, address, signature)) {
+                        let block = new BlockClass.Block({owner: address, star: star});
+                        this._addBlock(block).then((block) => {
+                            resolve(block);
+                        }).catch((error) => reject(error));
+                    } else {
+                        reject("Signature not valid");
+                    }
+                } catch(err) {
+                    reject(err.message);
+                }
             }
         });
     }
@@ -202,22 +228,23 @@ class Blockchain {
         let self = this;
         let errorLog = [];
         return new Promise(async (resolve, reject) => {
-            for (let i = 0; i <= self.height; i++) {
-                Promise.all(self.chain.map((block) => (block.validate(), block.height)))
-                    .then((values) => {
-                        values.forEach((value, height) => {
-                            if (!value) {
+            Promise.all(self.chain.map((block) => [block.validate(), block.height]))
+                .then((values) => {
+                    values.forEach((value) => {
+                        value[0].then((passed) => {
+                            const height = value[1];
+                            if (!passed) {
                                 errorLog.push(`Block at height ${height} is not valid`);
                             }
                             if (height > 0) {
                                 if (self.chain[height].previousBlockHash !== self.chain[height-1].hash) {
-                                    errorLog.push(`Block $i previousBlockHash is not the same as the previous has`);        
+                                    errorLog.push(`Block ${height} previousBlockHash is not the same as the previous hash`);        
                                 }
                             }
                         })
                     });
-            }
-            resolve(errorLog);
+                    resolve(errorLog);
+                });
         });
     }
 
