@@ -71,9 +71,16 @@ class Blockchain {
                 block.height = height + 1;
                 block.time = new Date().getTime().toString().slice(0, -3);
                 block.hash = SHA256(JSON.stringify(block)).toString();
-                self.chain.push(block);
-                self.height++;
-                resolve(block);
+                // Validate the chain first
+                self.validateChain().then((errors) => {
+                    if (errors.length === 0) {
+                        self.chain.push(block);
+                        self.height++;
+                        resolve(block);
+                    } else {
+                        reject(errors);
+                    }
+                })
             }).catch((error) => reject(error))
         });
     }
@@ -196,16 +203,19 @@ class Blockchain {
         let errorLog = [];
         return new Promise(async (resolve, reject) => {
             for (let i = 0; i <= self.height; i++) {
-                self.chain[i].validate().then((value) => {
-                    if (!value) {
-                        errorLog.push(`Block $i hash is not valid`);
-                    }
-                    if (i > 0) {
-                        if (self.chain[i].previousBlockHash !== self.chain[i-1]) {
-                            errorLog.push(`Block $i previousBlockHash is not the same as the previous has`);
-                        }
-                    }
-                })
+                Promise.all(self.chain.map((block) => (block.validate(), block.height)))
+                    .then((values) => {
+                        values.forEach((value, height) => {
+                            if (!value) {
+                                errorLog.push(`Block at height ${height} is not valid`);
+                            }
+                            if (height > 0) {
+                                if (self.chain[height].previousBlockHash !== self.chain[height-1].hash) {
+                                    errorLog.push(`Block $i previousBlockHash is not the same as the previous has`);        
+                                }
+                            }
+                        })
+                    });
             }
             resolve(errorLog);
         });
