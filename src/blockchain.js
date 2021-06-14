@@ -43,22 +43,20 @@ class Blockchain {
     async tamperWithBlock(height) {
         const block = await this.getBlockByHeight(height);
         if (block) {
-          block.time = 3;
-          return block;
-        } else {
-          return null;
+            block.time = 3;
+            return block;
         }
-      }
+        return null;
+    }
     
-      async tamperWithChain(height) {
+    async tamperWithChain(height) {
         const block = await this.getBlockByHeight(height);
         if (block) {
-          block.previousBlockHash = 123456;
-          return block;
-        } else {
-          return null;
+            block.previousBlockHash = 123456;
+            return block;
         }
-      }
+        return null;
+    }
 
     /**
      * Utility method that return a Promise that will resolve with the height of the chain
@@ -153,7 +151,7 @@ class Blockchain {
                     } else {
                         reject("Signature not valid");
                     }
-                } catch(err) {
+                } catch(err) { //if bitcoinMessage.verify throws an error, catch it and report it
                     reject(err.message);
                 }
             }
@@ -228,18 +226,20 @@ class Blockchain {
         let self = this;
         let errorLog = [];
         return new Promise(async (resolve, reject) => {
+            // Resolve when all promises resolve
+            // return the validation return and the block height to check previous hash
             Promise.all(self.chain.map((block) => [block.validate(), block.height]))
                 .then((values) => {
                     values.forEach((value) => {
+                        //first value is the validation
                         value[0].then((passed) => {
+                            //second value is the block height
                             const height = value[1];
                             if (!passed) {
                                 errorLog.push(`Block at height ${height} is not valid`);
                             }
-                            if (height > 0) {
-                                if (self.chain[height].previousBlockHash !== self.chain[height-1].hash) {
-                                    errorLog.push(`Block ${height} previousBlockHash is not the same as the previous hash`);        
-                                }
+                            if (height > 0 && self.chain[height].previousBlockHash !== self.chain[height-1].hash) {
+                                errorLog.push(`Block ${height} previousBlockHash is not the same as the previous hash`);        
                             }
                         })
                     });

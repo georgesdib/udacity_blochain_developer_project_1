@@ -43,20 +43,10 @@ class Block {
 
             // Need to nullify the block's hash as the hash of the block
             // is calculated with this field set to null
-            self.hash = null;
-                                            
             // Recalculate the hash of the Block
-            const newHash = SHA256(JSON.stringify(self)).toString();
+            const newHash = SHA256(JSON.stringify({...self, hash: null})).toString();
             // Comparing if the hashes changed
-            // Returning the Block is not valid
-            if (newHash !== currentHash) {
-                resolve(false);
-                // No need to set the hash back as it's invalid
-            } else {
-                // Returning the Block is valid
-                self.hash = currentHash;
-                resolve(true);
-            }
+            resolve(newHash === currentHash);
         });
     }
 
