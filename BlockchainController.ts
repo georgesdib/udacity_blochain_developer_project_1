@@ -5,10 +5,17 @@
  * This class expose the endpoints that the client applications will use to interact with the 
  * Blockchain dataset
  */
-class BlockchainController {
+
+ import express = require("express");
+ import BlockChain = require('./src/blockchain');
+
+export class BlockchainController {
+
+    app: express;
+    blockchain: BlockChain.Blockchain;
 
     //The constructor receive the instance of the express.js app and the Blockchain class
-    constructor(app, blockchainObj) {
+    public constructor(app: express, blockchainObj: BlockChain.Blockchain) {
         this.app = app;
         this.blockchain = blockchainObj;
         // All the endpoints methods needs to be called in the constructor to initialize the route.
@@ -168,5 +175,3 @@ class BlockchainController {
     }
 
 }
-
-module.exports = (app, blockchainObj) => { return new BlockchainController(app, blockchainObj);}

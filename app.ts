@@ -6,15 +6,19 @@
  * - `morgan` Isn't required but help with debugging and logging
  * - `body-parser` This module allows to parse the body of the post request into a JSON
  */
-const express = require("express");
-const morgan = require("morgan");
-const bodyParser = require("body-parser");
+import express = require("express");
+import morgan = require("morgan");
+import bodyParser = require("body-parser");
 /**
  * Require the Blockchain class. This allow us to have only one instance of the class.
  */
-const BlockChain = require('./src/blockchain.js');
+import BlockChain = require('./src/blockchain');
+import BlockchainController = require('./BlockchainController');
 
 class ApplicationServer {
+
+	app: express;
+	blockchain: BlockChain.Blockchain;
 
 	constructor() {
 		//Express application object
@@ -42,7 +46,7 @@ class ApplicationServer {
 	}
 
 	initControllers() {
-        require("./BlockchainController.js")(this.app, this.blockchain);
+		new BlockchainController.BlockchainController(this.app, this.blockchain);
 	}
 
 	start() {

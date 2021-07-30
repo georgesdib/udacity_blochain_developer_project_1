@@ -9,10 +9,15 @@
  *  run asynchronous.
  */
 
-const SHA256 = require('crypto-js/sha256');
-const hex2ascii = require('hex2ascii');
+import SHA256 = require('crypto-js/sha256');
+import hex2ascii = require('hex2ascii');
 
-class Block {
+export class Block {
+    hash: string;
+    height: number;
+    body: string;
+    time: number;
+    previousBlockHash: string;
 
     // Constructor - argument data will be the object containing the transaction data
 	constructor(data){

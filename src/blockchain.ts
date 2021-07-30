@@ -8,11 +8,14 @@
  *  
  */
 
-const SHA256 = require('crypto-js/sha256');
-const BlockClass = require('./block.js');
-const bitcoinMessage = require('bitcoinjs-message');
+import SHA256 = require('crypto-js/sha256');
+import BlockClass = require('./block');
+import bitcoinMessage = require('bitcoinjs-message');
 
-class Blockchain {
+export class Blockchain {
+
+    chain: BlockClass.Block[];
+    height: number;
 
     /**
      * Constructor of the class, you will need to setup your chain array and the height
@@ -41,7 +44,7 @@ class Blockchain {
     }
 
     async tamperWithBlock(height) {
-        const block = await this.getBlockByHeight(height);
+        const block: BlockClass.Block = await this.getBlockByHeight(height);
         if (block) {
             block.time = 3;
             return block;
@@ -52,7 +55,7 @@ class Blockchain {
     async tamperWithChain(height) {
         const block = await this.getBlockByHeight(height);
         if (block) {
-            block.previousBlockHash = 123456;
+            block.previousBlockHash = "123456";
             return block;
         }
         return null;
@@ -82,7 +85,7 @@ class Blockchain {
     _addBlock(block) {
         let self = this;
         return new Promise(async (resolve, reject) => {
-            self.getChainHeight().then((height) => {
+            self.getChainHeight().then((height: number) => {
                 if (height > -1) {
                     block.previousBlockHash = self.chain[self.height].hash;
                 }
@@ -90,7 +93,7 @@ class Blockchain {
                 block.time = new Date().getTime().toString().slice(0, -3);
                 block.hash = SHA256(JSON.stringify(block)).toString();
                 // Validate the chain first
-                self.validateChain().then((errors) => {
+                self.validateChain().then((errors: string[]) => {
                     if (errors.length === 0) {
                         self.chain.push(block);
                         self.height++;
@@ -181,7 +184,7 @@ class Blockchain {
      * with the height equal to the parameter `height`
      * @param {*} height 
      */
-    getBlockByHeight(height) {
+    getBlockByHeight(height): Promise<BlockClass.Block> {
         let self = this;
         return new Promise((resolve, reject) => {
             let block = self.chain.filter(p => p.height === height)[0];
@@ -222,19 +225,19 @@ class Blockchain {
      * 1. You should validate each block using `validateBlock`
      * 2. Each Block should check the with the previousBlockHash
      */
-    validateChain() {
+    validateChain(): Promise<string[]> {
         let self = this;
-        let errorLog = [];
+        let errorLog: string[] = [];
         return new Promise(async (resolve, reject) => {
             // Resolve when all promises resolve
             // return the validation return and the block height to check previous hash
             Promise.all(self.chain.map((block) => [block.validate(), block.height]))
                 .then((values) => {
-                    values.forEach((value) => {
+                    values.forEach((value: (Promise<boolean> | number)[]) => {
                         //first value is the validation
-                        value[0].then((passed) => {
+                        (value[0] as Promise<boolean>).then((passed) => {
                             //second value is the block height
-                            const height = value[1];
+                            const height: number = value[1] as number;
                             if (!passed) {
                                 errorLog.push(`Block at height ${height} is not valid`);
                             }
